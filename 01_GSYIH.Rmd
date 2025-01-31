@@ -1,0 +1,161 @@
+---
+title: "Ulusal Geliri ve Yurtiçi Çıktıyı Ölçme"
+author: "Murat Donduran"
+date: "2025-01-26"
+output: bookdown::html_document2
+---
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Giriş
+
+Ekonomide üretilen mal ve hizmetlerin toplam değeri olan gayri safi yurtiçi hasıla (GSYİH), ekonomik faaliyetin en geniş ölçüsüdür. GSYİH'yi belirlemek için bir yılda üretilen (örneğin, cep telefonlarından, otomobillerden, ders kitaplarından, Dijital içeriklerden, bilgisayarlardan, saç kesimlerinden ve pop konserlerinden) üretilen tüm mal ve hizmetlerin değerini topluyoruz. 
+
+GSYİH'yı ölçmek için birkaç alternatif tanım ve yaklaşım vardır. İlk GSYİH tanımımız, üretilen mal ve hizmetler bakımından verilmektedir. GSYİH'yı harcama ve gelir olarak da tanımlayabiliriz: GSYİH, ekonomideki herkesin toplam geliridir ve aynı zamanda ekonomideki mal ve hizmetler için toplam harcama tutarıdır. Bu çeşitli GSYİH tanımları eşdeğerdir, çünkü bir ekonomideki toplam gelirin toplam üretime eşit olan toplam harcama miktarına eşit olması gerekir. Bu akıl yürütme sezgisel bir anlam ifade eder, çünkü ekonomide üretilen her mal veya hizmet için bir alıcı ve satıcı vardır. Mahalle berberinizdeki bir saç kesimi için 150 TL. ödemeniz durumunda, 150 TL. harcamanız, 150 TL. saç kesimini üreten berberin 150 TL. geliridir.
+
+Ekonomik faaliyeti ve bileşenlerini ölçen bir muhasebe sistemi olan ulusal gelir muhasebesi, GSYİH ölçmenin harcama, gelir ve üretim yöntemleri arasındaki ilişkiyi gösterir. Ulusal gelir muhasebesini, ulusal gelir muhasebesinin temel özdeşliği ile ifade ederiz:
+
+\begin{equation}\label{ch01:eq:001}
+\textbf{Toplam Üretim} = \textbf{Toplam Harcama} = \textbf{Toplam Gelir}
+\end{equation}
+
+Yukarıdaki eşitlik, GSYİH hesaplanırken üç yaklaşımdan herhangi birinin - üretim, harcama veya gelir - aynı cevabı vermesi gerektiğini söylemektedir. GSYİH tanımlarımızı bu yaklaşımların her biriyle hesaplayalım.
+
+# Harcama Yaklaşımı: GSYİH Bileşenleri
+
+GSYİH harcama yaklaşımıyla hesaplamak tekniğini inceleyelim. GSYİH şu anda ekonomide üretilen nihai mal ve hizmetlere yapılan toplam harcamadır. Harcama yaklaşımı, harcamaların GSYH'ye ilave olan farklı bileşenleri hakkında bilgi almamızı sağlar. Ulusal gelir hesapları, harcamaları dört temel kategoriye ayırmaktadır: tüketim harcamaları, yatırım, devlet alımları (harcamalar) ve her biri sırasıyla tartışacağımız net ihracat. Ulusal gelir hesapları, milli gelir kimliğindeki GSYİH'yı belirlemek için bu dört harcama kategorisini toplamaktadır.
+\begin{equation}
+Y = C + I + G + NX
+(\#eq:emc)
+\end{equation}
+Burada,
+\begin{align*}
+Y  &=  \text{GSYİH}, \text{toplam üretim(çıktı)},\\
+C  &=  \text{tüketim harcamaları},\\
+I  &=  \text{yatırımlar},\\
+G  &=  \text{hükümet harcamaları},\\
+NX &=  \text{net ihracat}.
+\end{align*}
+
+
+
+```{r GDPtable, echo=FALSE, warning=FALSE, message=FALSE}
+# setwd("C:/Users/Murat-Lenovo-E14/Dropbox/0000_AKADEMIK_CALISMA/IntroMacroeconomicsTurkey")
+library(data.table)
+library(CBRT)
+library(xts)
+library(ggplot2)
+library(dplyr)
+library(zoo)
+library(knitr)
+library(vtable)
+library(bookdown)
+myCBRTKey <- "CWZAdm6tcx"
+names <- showSeriesNames("bie_gsyhhycf")
+GDPyearly <- getDataSeries(c(names$seriesCode), freq = 8)
+GDPyearly <- subset(GDPyearly,time  > 1997)
+colnames(GDPyearly) <- c('time','C','G','I','CinS','X','M','GDP','C_NPISH')
+save(GDPyearly,file="GDPyearlyNOMINAL.Rda")
+GDPyearlyNOMINAL <- GDPyearly
+GDPyearlyNOMINAL$time <- as.Date(as.character(GDPyearlyNOMINAL$time), format = "%Y")
+GDPyearlyNOMINALXTS <-as.xts(GDPyearlyNOMINAL)
+yearend <- format(as.Date(max(index(GDPyearlyNOMINALXTS))), "%Y")
+A <- last(GDPyearlyNOMINALXTS)
+GDPlast <- as.numeric(A[1,7])
+Clast <- as.numeric(A[1,1])
+Ilast <- as.numeric(A[1,3])
+Glast <- as.numeric(A[1,2])
+Xlast <- as.numeric(A[1,5])
+Mlast <- as.numeric(A[1,6])
+CinSlast <- as.numeric(A[1,4])
+ValuesLast <- c(GDPlast, Clast, Ilast, Glast, CinSlast, Xlast, Mlast)
+Bilesenler <- c("Gayrisafi Yurtiçi Hasıla (Y)", "Nihai Tüketim Harcamaları (C)", "Yatırımlar (I)", "Hükümet Harcamaları (G)", "Stoklardaki Değişme", "İhracat (X)", "İthalat (M)")
+df <- data.frame(Bilesenler, ValuesLast)
+knitr::kable(df, format.args = list(big.mark = ",", scientific = FALSE),, caption = paste(yearend, "YILI GSYİH BİLEŞENLERİ (TL. Cinsinden)"), col.names = gsub("[.]", " ", c("Bileşenler", "Değerler (bin TL.)")))
+
+dolar <- getDataSeries("TP.DK.USD.A.YTL", startDate = Sys.Date())
+dolarLast <- as.numeric(dolar[1,2])
+ValuesDolar <- ValuesLast/dolarLast
+dfdolar <- data.frame(Bilesenler, ValuesDolar)
+knitr::kable(dfdolar, format.args = list(big.mark = ",", scientific = FALSE), caption = paste(yearend, "YILI GSYİH BİLEŞENLERİ (Dolar Cinsinden)"), col.names = gsub("[.]", " ", c("Bileşenler", "Değerler (Bin Dolar ($))")))
+```
+
+Eşitlik \@ref(eq:emc),  makroekonomideki en temel eşitliklerden biridir ve derslerde birçok kez kullanılmaktadır. Yukarıdaki tabloda, Türkiye ekonomisinden bu dört bileşen ve bazı alt bileşenlerle ilgili `r yearend` verilerini göstermektedir.
+
+## Bileşenlerin GSYİH'deki Paylarının Zaman İçindeki Değişimi
+
+
+
+```{r pressure, echo=FALSE, warning=FALSE, message=FALSE}
+GDPyearly[,2] <- GDPyearly[,2]/GDPyearly[,8]
+GDPyearly[,3] <- GDPyearly[,3]/GDPyearly[,8]
+GDPyearly[,4] <- GDPyearly[,4]/GDPyearly[,8]
+GDPyearly[,5] <- GDPyearly[,5]/GDPyearly[,8]
+GDPyearly[,6] <- GDPyearly[,6]/GDPyearly[,8]
+GDPyearly[,7] <- GDPyearly[,7]/GDPyearly[,8]
+GDPyearly[,9] <- GDPyearly[,9]/GDPyearly[,8]
+save(GDPyearly,file="GDPyearly.Rda")
+GDPyearly$time <- as.Date(as.character(GDPyearly$time), format = "%Y")
+GDPyearlyXTS <-as.xts(GDPyearly)
+xtsGDPyearly <-as.xts.data.table(GDPyearly)
+saveRDS(xtsGDPyearly, file = "xtsGDPyearly.rds")
+xtsGDPyearly$CinS <- NULL
+xtsGDPyearly$GDP <- NULL
+xtsGDPyearly$C_NPISH <- NULL
+plot.xts(xtsGDPyearly, fig.align = 'center', grid.ticks.lwd = 0, grid.ticks.lty = 3, main ="Türkiye'de GSYİH Bileşenleri (1998 - 2024)", main.timespan = FALSE, legend.loc = "topleft", legend(c("C", "I", "G", "X", "M"), lty = c(1, 1), lwd = c(2, 1), col = c("black", "red", "blue", "darkgray", "yellow")))
+```
+
+```{r stdevs, echo=FALSE}
+# readRDS(xtsGDPyearly, file = "xtsGDPyearly.rds")
+yearinitial <- format(as.Date(min(index(xtsGDPyearly))), "%Y")
+yearend <- format(as.Date(max(index(xtsGDPyearly))), "%Y")
+kac <- as.numeric(yearend)-as.numeric(yearinitial)
+```
+
+Yukarıdaki şekil, `r yearinitial` - `r yearend` yılları arasında Türkiye'de farklı harcama bileşenlerinin GSYİH'ye oranı olarak son `r kac` yılda nasıl değiştiğini göstermektedir. Şekile bakıldığında açıkça ilginç gelişmeler göze çarpmaktadır. Ayrıca aşağodaki tablo da veri HTML formatı için dinamik grafik olarak yayınlanmıştır. Grafiğin üstüne gelindiğinde sağ üst köşede bütün gözlemlerin aldığı değerler okunabilmektedir.
+
+
+``` {r table01, echo=FALSE, warning=FALSE, message=FALSE}
+library(data.table)
+library(xts)
+library(RColorBrewer)
+library(dygraphs)
+xtsGDPyearly <- readRDS(xtsGDPyearly, file = "xtsGDPyearly.rds")
+xtsGDPyearly$CinS <- NULL
+xtsGDPyearly$GDP <- NULL
+xtsGDPyearly$C_NPISH <- NULL
+p <- dygraph(xtsGDPyearly, main ="Türkiye'de GSYİH Bileşenleri (1998 - 2024)") %>%
+  dyOptions(colors = RColorBrewer::brewer.pal(5, "Set2"), labelsUTC = TRUE, fillGraph=TRUE, fillAlpha=0.1, drawGrid = FALSE) %>%
+  dyRangeSelector() %>%
+  dyCrosshair(direction = "vertical") %>%
+  dyHighlight(highlightCircleSize = 5, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = FALSE)  %>%
+  dyRoller(rollPeriod = 1)
+p
+
+# r <- dygraph(Inflationxts$monthly_inflation, main = "Türkiye'de Çekirdek Enflasyon (H)") %>%
+#   dyOptions(labelsUTC = TRUE, fillGraph=TRUE, fillAlpha=0.1, drawGrid = FALSE, colors="#D8AE5A") %>%
+#   dyRangeSelector() %>%
+#   dyCrosshair(direction = "vertical") %>%
+#   dyHighlight(highlightCircleSize = 10, highlightSeriesBackgroundAlpha = 0.2, hideOnMouseOut = FALSE)  %>%
+#   dyRoller(rollPeriod = 1)
+# r
+```
+
+Türkiye'de tüketim harcamaları son yirmi yıl göz önüne alındığında azalma trendi göstermektedir. Yatırımlar artma eğilimi sahiptir, ancak GSYİH'nin en volatile bileşenidir. İlerideki konularda yatırımların volatilesinin GSYİH volatilitesinin en önemli nedeni olduğu üzerinde durulacaktır. Devlet harecamaları tartışmaları açısından GSYİH oranı olarak $G$ durağan bir seyir izlemektedir. Devletin ekonomide büyüklüğü ilgili dönem itibariyle önemli bir değişim göstermemiştir. Çoğu yıllarda, net ihracat negatiftir ve Türkiye ticaret açığı vermektedir. Sadece birkaç yıl için, ticaret açığı GSYİH'nın % 5'inin üzerine çıkmıştır. Bu konuya ilerleyen bölümlerde tekrar geri dönülecektir.
+
+```{r table02, echo=FALSE}
+st(GDPyearly)
+```
+
+Yukarıdaki Tabloda GSYİH bileşenlerinin betimsel istatistik değerleri verilmektedir. **CinS** değişkeni, stoklardaki değişim ve **C_NPISH** değişkeni kar amacı gütmeyen organizasyonların tüketim harcamalarını göstermektedir. Ortalama değerleri sıfıra yakındır. Bu veriler TCMB elektronik veri dağıtım merkezinden aynı altbölüm altından gelmektedir.
+
+```{r tuik01, echo=FALSE, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tuik)
+
+```
+
