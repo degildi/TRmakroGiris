@@ -1,8 +1,18 @@
 ---
 title: "Ulusal Geliri ve Yurtiçi Çıktıyı Ölçme"
-author: "Murat Donduran"
+author: 
+  name: Prof. Dr. Murat Donduran
+  affiliation: Yıldız Teknik Üniversitesi
 date: "2025-01-26"
-output: bookdown::html_document2
+output:
+  bookdown::html_document2:
+    number_sections: yes
+    theme: readable
+    highlight: haddock
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    keep_md: yes
 ---
 
 
